@@ -1,0 +1,149 @@
+/**
+ * Processing Sound Library, Example 6
+ * 
+ * This sketch shows how to use the Amplitude class to analyze a
+ * stream of sound. In this case a sample is analyzed. The smoothFactor
+ * variable determines how much the signal will be smoothed on a scale
+ * from 0 - 1.
+ */
+
+import processing.sound.*;
+
+// Declare the processing sound variables 
+SoundFile sample;
+Amplitude rms;
+AudioIn in;
+
+// Declare a scaling factor
+float scale = 5.0;
+
+// Declare a smooth factor
+float smoothFactor = 0.25;
+
+// Used for smoothing
+float sum;
+
+void setup() {
+  size(640, 360);
+
+  //Load and play a soundfile and loop it
+  //sample = new SoundFile(this, "beat.aiff");
+  //sample.loop();
+  
+  in = new AudioIn(this, 0);
+  //fft.input(sample);
+  
+  // start the Audio Input
+  in.start();
+
+  // Create and patch the rms tracker
+  rms = new Amplitude(this);
+  rms.input(in);
+}      
+
+void draw() {
+  // Set background color, noStroke and fill color
+  background(0);
+  noStroke();
+  fill(255, 0, 150);
+  
+  ///stroke(127,255,0);
+  //strokeWeight(2);
+
+  // Smooth the rms data by smoothing factor
+  sum += (rms.analyze() - sum) * smoothFactor;  
+
+  // rms.analyze() return a value between 0 and 1. It's
+  // scaled to height/2 and then multiplied by a scale factor
+  float rmsScaled = sum * (height/2) * scale;
+
+  // Draw an ellipse at a size based on the audio analysis
+  ellipse(width/2, height/2, rmsScaled, rmsScaled);
+  //point(width/2, rmsScaled);
+  //point(height/2, rmsScaled);
+  //line(width/2, height, width/2, rmsScaled );
+  
+  
+  println(rmsScaled);
+}
+
+
+//
+
+import processing.sound.*;
+
+FFT fft;
+AudioIn in;
+int bands = 4096;
+float[] spectrum = new float[bands];
+
+// for display color
+float r;
+float g;
+float b;
+float y_pos; 
+//float y_pos2;
+
+void setup() {
+  size(512, 360);
+  background(255);
+    
+  // Create an Input stream which is routed into the Amplitude analyzer
+  fft = new FFT(this, bands);
+  in = new AudioIn(this, 0);
+  
+  // start the Audio Input
+  in.start();
+  
+  // patch the AudioIn
+  fft.input(in);
+}      
+
+void draw() { 
+  background(0);
+  r = random(0, 255);
+  g = random(0, 255);
+  b = random(0, 255);
+  
+  fft.analyze(spectrum);
+
+  for(int i = 0; i < bands; i++){
+  // amplitude variable to to track   
+  y_pos = height - spectrum[i]*(height) * 15;
+  //y_pos2 = spectrum[i] * 60;
+  
+  // Change color (Flicker)
+  //stroke(r, g, b);
+  
+  //Change color based on amplitude
+  if (y_pos <+ 120){
+    stroke(220,20,60);
+    strokeWeight(1);
+  } else if (y_pos > 120 && y_pos < 240){
+    stroke(127,255,0);
+    strokeWeight(2);
+  } else {
+    stroke(255);
+    strokeWeight(3);
+  }
+  
+  // The result of the FFT is normalized
+  // draw the line for frequency band i scaling it up by 5 to get more amplitude.
+  //stroke(255);
+  //line( i, height, i, (height) - spectrum[i]*(height)*5 );
+  //line( i, height, i, y_pos );
+  
+  // The result of the FFT is normalized
+  // draw the point for frequency band i scaling it up by 5 to get more amplitude.
+  point(i, height);
+  point(i, y_pos);
+  
+  //point(i, 0);
+  //point(i, y_pos2);
+  
+  // For analysis and debugging
+  //println(spectrum[i], " ", (height/2) - spectrum[i], " ", (height/2) - spectrum[i]*(height/2)*5 );
+  //println(bands);
+  //println(y_pos2);
+  } 
+}
